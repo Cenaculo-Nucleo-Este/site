@@ -73,15 +73,17 @@
   ],
   "Paredes": [
     {
-      "name": "Cla X",
+      "name": "Cla 14",
       "agrupamento": "519 Paredes",
       "description": null,
-      "image": null,
-      "instagram": null,
+      "image": "clas/irivo.jpeg",
+      "instagram": "https://www.instagram.com/escutismo519",
       "facebook": null,
       "email": "geral.519@escutismo.pt",
-      "coordinates": null,
-      "ativo": false
+      "coordinates": {
+        "latitude": 41.2078964,
+        "longitude": -8.341642
+      }
     }
   ],
   "Penafiel": [
