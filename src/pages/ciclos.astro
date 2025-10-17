@@ -378,13 +378,13 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
         <div class="aspect-[20/9] w-2/3 overflow-hidden justify-center items-center mx-auto mb-4 relative group">
           <img
               src="${baseUrl}${ciclo.image}"
-              alt="${ciclo.number}º Ciclo"
+              alt="${ciclo.number}º Ciclo - ${ciclo.imaginario}"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <button 
             class="expand-ciclo-image absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
             data-image="${baseUrl}${ciclo.image}"
-            data-title="${ciclo.image_description ? `${ciclo.image_description} do ${ciclo.number}º Ciclo - ${ciclo.lema}` : `EP do ${ciclo.number}º Ciclo - ${ciclo.lema}`}"
+            data-title="${ciclo.image_description ? `${ciclo.image_description} do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}` : `EP do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}`}"
             aria-label="Expandir imagem"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -397,7 +397,7 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
       contentContainer.innerHTML = `
         <div class="mb-6">
           <h2 class="text-3xl font-bold mb-4 text-center">
-            <span class="text-primary">${ciclo.number}º Ciclo</span>
+            <span class="text-primary">${ciclo.number}º Ciclo ${ciclo.imaginario ? `- ${ciclo.imaginario}` : ''}</span>
           </h2>
           <p class="text-lg mb-6 text-center">
             <span class="text-primary">${ciclo.lema}</span> ${ciclo.lema ? ' - ' : ''} ${ciclo.year}
@@ -454,7 +454,7 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
             
             // Update data attributes for modal
             frame.setAttribute('data-image', baseUrl + leftSidePictures[index].replace('../public/', ''));
-            frame.setAttribute('data-title', `Ciclo ${ciclo.number} - Imagem ${index + 1}`);
+            frame.setAttribute('data-title', `Ciclo ${ciclo.number} - ${ciclo.imaginario} - Imagem ${index + 1}`);
             
             // Apply fade effect
             img.style.opacity = '0.3';

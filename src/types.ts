@@ -64,6 +64,7 @@ export interface Ciclo {
   year: string;
   ep: EP;
   lema: string;
+  imaginario: string | null;
   image: ImageMetadata | string;
   carta: string;
   instagram: string | null;

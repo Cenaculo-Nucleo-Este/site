@@ -3,6 +3,7 @@
     {
       "number": "XV",
       "year": "2024/2025",
+      "imaginario": "Kenai e Koda",
       "lema": "Conquista a tua marca",
       "image": "pics/xv/xv.jpeg",
       "carta": "https://drive.google.com/file/d/105Qx2CJgdhVjXD3NQ6O8Mz29n0iZW_bR/view?usp=sharing",
@@ -149,6 +150,7 @@
     {
       "number": "XIV",
       "year": "2023/2024",
+      "imaginario": "Elementos",
       "lema": "Sê o Elemento da Mudança",
       "image": "pics/xiv/xiv.jpg",
       "carta": "https://drive.google.com/file/d/1M8-4DrRoVMvTaBcq5pbP-yMt51j0q_7a/view?usp=sharing",
@@ -286,6 +288,7 @@
     {
       "number": "XIII",
       "year": "2022/2023",
+      "imaginario": "Encanto",
       "lema": "O Verdadeiro Dom és Tu!",
       "image": "pics/xiii/xiii.jpg",
       "carta": "https://drive.google.com/file/d/1lusXYjpGuDqKB91GWnrhC2Cg2Ucii6To/view",
@@ -428,6 +431,7 @@
     {
       "number": "XII",
       "year": "2021/2022",
+      "imaginario": "Luca",
       "lema": "O Universo é todo Teu!",
       "image": "pics/xii/xii.jpg",
       "carta": "https://drive.google.com/file/d/1yvy_M5qD94fuOIttZFOkTPJO8nX9f8OF/view?usp=sharing",
@@ -558,8 +562,9 @@
       }
     },
     {
-      "number": "XI",
+      "number": "XI", 
       "year": "2020/2021",
+      "imaginario": "Bora Lá!",
       "lema": "Basta a Magia de Acreditar",
       "image": "pics/xi/xi.png",
       "carta": "https://drive.google.com/file/d/1M0buW1rpl_ZmJJrGbDseu4koR57Bm5TG/view?usp=sharing",
@@ -702,6 +707,7 @@
     },
     {
       "number": "X",
+      "imaginario": "O Panda do Kong Fu",
       "year": "2019/2020",
       "lema": "",
       "image": "pics/x/x.jpg",
