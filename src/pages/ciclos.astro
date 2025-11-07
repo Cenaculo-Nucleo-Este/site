@@ -406,9 +406,12 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
 
       contentContainer.innerHTML = `
         <div class="mb-6">
-          <h2 class="text-3xl font-bold mb-4 text-center">
-            <span class="text-primary">${ciclo.number}º Ciclo ${ciclo.imaginario ? `- ${ciclo.imaginario}` : ''}</span>
+          <h2 class="text-3xl font-bold text-center">
+            <span class="text-primary">${ciclo.number}º Ciclo</span>
           </h2>
+          <p class="text-lg text-center">
+            <span class="text-primary"> ${ciclo.imaginario ? `${ciclo.imaginario}` : ''}</span>
+          </p>
           <p class="text-lg mb-6 text-center">
             <span class="text-primary">${ciclo.lema}</span> ${ciclo.lema ? ' - ' : ''} ${ciclo.year}
           </p>
