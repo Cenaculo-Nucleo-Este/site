@@ -189,20 +189,20 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
     function addHoverEffects(ciclo) {
         const cards = contentContainer.querySelectorAll(".group");
         cards.forEach((card) => {
-            const img = card.querySelector("img");
-            if (img) {
+            const media = card.querySelector("img, video");
+            if (media) {
                           card.addEventListener("mouseenter", () => {
                  const hoverScale = ciclo.scale * 1.05; // Scale up by 5%
-                 img.style.transform = `scale(${hoverScale})`;
-                 img.style.filter = "brightness(1.2)";
-                 img.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
+                 media.style.transform = `scale(${hoverScale})`;
+                 media.style.filter = "brightness(1.2)";
+                 media.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
               });
 
                           card.addEventListener("mouseleave", () => {
                 // Return to original scale from ciclo data
-                img.style.transform = `scale(${ciclo.scale})`;
-                img.style.filter = "";
-                img.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
+                media.style.transform = `scale(${ciclo.scale})`;
+                media.style.filter = "";
+                media.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
               });
             }
         });
@@ -359,12 +359,24 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
                   ` : ''}
 
                   <div class="relative overflow-hidden rounded-md aspect-[5/6] bg-gradient-to-br ${departmentGradients[key]} z-10">
-                    <img
+                    ${member.image && member.image.endsWith('.mp4') ? `
+                      <video
+                        src="${baseUrl}${member.image}"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                        style="transform: scale(${ciclo.scale}); object-position: center ${50 + (ciclo.translateY * 0.3)}%;"
+                        class="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+                      ></video>
+                    ` : `
+                      <img
                         src="${baseUrl}${member.image || 'pics/c_placeholder.png'}"
                         alt="${member.name}"
                         style="transform: scale(${ciclo.scale}); object-position: center ${50 + (ciclo.translateY * 0.3)}%;"
                         class="w-full h-full object-cover transition-transform duration-300 ease-in-out"
-                    />
+                      />
+                    `}
                   </div>
                   <div class="bg-white rounded-2xl p-3 mt-[-2rem] absolute left-0 right-0 mx-auto w-[80%] text-center shadow-md name-container z-20">
                     <h2 class="text-lg font-bold text-gray-900 mb-1 name-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -394,7 +406,7 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
           <button 
             class="expand-ciclo-image absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
             data-image="${baseUrl}${ciclo.image}"
-            data-title="${ciclo.image_description ? `${ciclo.image_description} do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}` : `EP do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}`}"
+            data-title="${ciclo.image_description ? `${ciclo.image_description} dlemao ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}` : `EP do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}`}"
             aria-label="Expandir imagem"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -632,7 +644,7 @@ const rightSidePictures = defaultCiclo.rightSidePictures || [];
 <style>
 
 
-  img {
+  img, video {
     transition: transform 0.3s ease-in-out;
   }
   

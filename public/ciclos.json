@@ -1,6 +1,152 @@
 {
   "ciclos": [
     {
+      "number": "XVI",
+      "year": "2025/2026",
+      "imaginario": "Soul",
+      "lema": "Dá vida à tua Alma",
+      "image": "pics/xvi/xvi.JPG",
+      "carta":"",
+      "instagram": "https://www.instagram.com/cenaculo_nucleo_este/",
+      "prePicturesLink": "",
+      "scale": 1,
+      "translateY": 0,
+      "leftSidePictures": [
+        "pics/xvi/l1.JPG",
+        "pics/xvi/l2.JPG",
+        "pics/xvi/l3.JPG",
+        "pics/xvi/l4.JPG"
+      ],
+      "rightSidePictures": [
+        "pics/xvi/r1.JPG",
+        "pics/xvi/r2.JPG",
+        "pics/xvi/r3.JPG",
+        "pics/xvi/r4.JPG"
+      ],
+      "ep": {
+        "coordination": {
+          "name": "Coordenação",
+          "members": [
+            {
+              "name": "Henrique Teixeira",
+              "image": "pics/xvi/ep/henrique.mp4",
+              "agrupamento": "680 Santão"
+            },
+            {
+              "name": "Vitória Ribeiro",
+              "image": "pics/xvi/ep/vitoria.mp4",
+              "agrupamento": "1039 Vilela"
+            }
+          ]
+        },
+        "forum": {
+          "name": "Fórum",
+          "members": [
+            {
+              "name": "Adriana Pinto",
+              "image": "pics/xvi/ep/adriana.mp4",
+              "agrupamento": "680 Santão"
+            },
+            {
+              "name": "Tiago Coelho",
+              "image": "pics/xvi/ep/tiago.mp4",
+              "agrupamento": "609 Parada de Todeia"
+            },
+            {
+              "name": "Beatriz Martins",
+              "image": "pics/xvi/ep/bea.mp4",
+              "agrupamento": "1371 Recarei"
+            }
+          ]
+        },
+        "logistica": {
+          "name": "Logística",
+          "members": [
+            {
+              "name": "Beatriz Barbosa",
+              "image": "pics/xvi/ep/barbosa.mp4",
+              "agrupamento": "1371 Recarei"
+            },
+            {
+              "name": "Jéssica Pereira",
+              "image": "pics/xvi/ep/jessica.mp4",
+              "agrupamento": "1039 Vilela"
+            },
+            {
+              "name": "Mariana Ferreira",
+              "image": "pics/xvi/ep/mariana.mp4",
+              "agrupamento": "1341 Freamunde"
+            }
+          ]
+        },
+        "communication": {
+          "name": "Comunicação",
+          "members": [
+            {
+              "name": "Diana Pereira",
+              "image": "pics/xvi/ep/di.mp4",
+              "agrupamento": "1171 Fornos"
+            },
+            {
+              "name": "Carlota Sousa",
+              "image": "pics/xvi/ep/carlota.mp4",
+              "agrupamento": "1371 Recarei"
+            },
+            {
+              "name": "Matilde Moreira",
+              "image": "pics/xvi/ep/tita.mp4",
+              "agrupamento": "1173 Fornos"
+            }
+          ]
+        },
+        "animation": {
+          "name": "Animação",
+          "members": [
+            {
+              "name": "Inês Lemos",
+              "image": "pics/xvi/ep/ines.mp4",
+              "agrupamento": "680 Santão"
+            },
+            {
+              "name": "Gabriel Pacheco",
+              "image": "pics/xvi/ep/gabi.mp4",
+              "agrupamento": "873 Urrô"
+            },
+            {
+              "name": "Eduarda Magalhães",
+              "image": "pics/xvi/ep/duda.mp4",
+              "agrupamento": "1171 Fornos"
+            }
+          ]
+        },
+        "observadores": {
+          "name": "Observadores",
+          "members": [
+            {
+              "name": "Chefe Pardal",
+              "image": "pics/xvi/ep/pardal.png",
+              "agrupamento": "1039 Vilela"
+            },
+            {
+              "name": "Chefe Zé",
+              "image": "pics/xvi/ep/mocas.png",
+              "agrupamento": "1371 Recarei"
+            }
+          ]
+        },
+        "embaixador": {
+          "name": "Embaixador",
+          "members": [
+            {
+              "name": "Vicente Vicente",
+              "image": "pics/xvi/ep/vicente.mp4",
+              "agrupamento": "1371 Recarei"
+            }
+          ]
+        }
+      }
+    },
+    {
       "number": "XV",
       "year": "2024/2025",
       "imaginario": "Kenai e Koda",
