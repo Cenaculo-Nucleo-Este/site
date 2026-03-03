@@ -8,7 +8,7 @@
       "image": "pics/xvi/xvi.JPG",
       "carta":"",
       "instagram": "https://www.instagram.com/cenaculo_nucleo_este/",
-      "prePicturesLink": "",
+      "prePicturesLink": "https://drive.google.com/drive/u/1/folders/1b_5DzN0KcC2WrIHVuVTP6rl5Uog_AJCC",
       "scale": 1,
       "translateY": 0,
       "leftSidePictures": [
@@ -124,12 +124,12 @@
           "members": [
             {
               "name": "Chefe Pardal",
-              "image": "pics/xvi/ep/pardal.png",
+              "image": "pics/xvi/ep/pardal.mp4",
               "agrupamento": "1039 Vilela"
             },
             {
               "name": "Chefe Zé",
-              "image": "pics/xvi/ep/mocas.png",
+              "image": "pics/xvi/ep/mocas.mp4",
               "agrupamento": "1371 Recarei"
             }
           ]
