@@ -1,40 +1,535 @@
 ---
 import Layout from "~/components/Layout.astro";
 import ContentSection from "~/components/content-section.astro";
-import { Image } from 'astro:assets';
-import ricVit from "../../public/ric-vit.jpeg"
+import ImageModal from "~/components/ImageModal.astro";
+import CompatibilityList from "~/components/compatibility-list.astro";
+import { DEPARTMENT_GRADIENTS } from "~/types";
+import type { CompatibilityItem } from "~/types";
+import ciclosData from "../../public/ciclos.json" assert { type: "json" };
+
+// Get the latest ciclo (first in the array)
+const latestCiclo = ciclosData.ciclos[0];
+
+const getImageSrc = (imagePath: string) => {
+  return `${import.meta.env.BASE_URL}${imagePath}`;
+};
+
+// Get aesthetic pictures from the latest ciclo
+const leftSidePictures = latestCiclo.leftSidePictures || [];
+const rightSidePictures = latestCiclo.rightSidePictures || [];
+
+// Function to create compatibility items from ciclo data
+const createCompatibilityItems = (ciclo: any): Array<CompatibilityItem> => [
+  {
+    title: "Fotos Pŕe",
+    icon: "camera",
+    url: ciclo.prePicturesLink,
+  }
+];
+
+// Get compatibility items for the latest ciclo
+const compatibilityItems = createCompatibilityItems(latestCiclo);
 ---
 
 <Layout
   title="EP Atual - Cenáculo Núcleo Este"
-  description="Os meus objetivos e experiências no escutismo"
+  description="Equipa Projeto do Cenáculo Núcleo Este"
 >
-  <div class="space-y-24 px-8 py-16 flex flex-col items-center justify-center">
-
-    <ContentSection title="Equipa Projeto Atual" id="ep-atual">
-    <Image src={ricVit} alt="EP Atual" class="w-full md:w-1/3 lg:w-1/3 justify-center items-center" />
+  <div class="px-4 py-8">
+    <ContentSection title={`Equipa Projeto ${latestCiclo.number} Ciclo`} id="ep-atual">
       <Fragment slot="lead">
-        O Cenáculo <span class="text-primary"> voltou!! </span>
-        Não percas tempo e <span class="text-primary"> inscreve-te </span> no 
-        <span class="text-primary"> Pré Cenáculo!!</span>
-        As inscrições estão abertas até dia <span class="text-primary"> 13 de Dezembro</span>, 
-        são individais no SIIE, <span class="text-primary"> código: N15040027</span> com pagamento em agrupamento.
-
-        Até já!!
-      </br>
-        <span class="text-primary"> Vive, Partilha Y Avança </span>
-
+        {latestCiclo.imaginario}
+        <br />
+        <span class="whitespace-nowrap"><span class="text-primary">"{latestCiclo.lema}"</span> - {latestCiclo.year}</span>
       </Fragment>
-      <div class="">
-        <a
-          href="https://www.instagram.com/cenaculo_nucleo_este/"
-          class="flex flex-col items-center justify-center gap-1 border-2 border-primary bg-primary px-6 py-4 text-white hover:bg-default hover:text-primary transition-colors"
-        >
-          <span class="font-bold">XVI Ciclo</span>
-        </a>
 
+      <div class="flex flex-col lg:flex-row gap-4 mt-8 relative">
+        <!-- Left column - Aesthetic Pictures -->
+        {leftSidePictures.length > 0 && (
+          <div class="hidden lg:flex w-1/6 flex-col gap-4 sticky top-8 self-start">
+            <div class="aesthetic-gallery left-gallery">
+              {leftSidePictures.map((pic, index) => (
+                <div
+                  class={`aesthetic-frame frame-${index + 1} clickable-frame`}
+                  style={`animation-delay: ${index * 0.2}s`}
+                  data-image={getImageSrc(pic)}
+                  data-title={`Ciclo ${latestCiclo.number} - Imagem ${index + 1}`}
+                >
+                  <img
+                    src={getImageSrc(pic)}
+                    alt={`Aesthetic ${index + 1}`}
+                    class="aesthetic-image"
+                  />
+                  <div class="image-overlay"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Center column - Main Content -->
+        <div class={`w-full ${(leftSidePictures.length > 0 || rightSidePictures.length > 0) ? 'lg:w-2/3' : 'lg:w-full'}`}>
+          <!-- Compatibility List -->
+          <div class="flex flex-col lg:flex-row gap-4 justify-center items-start">
+            <div class="mb-6 flex justify-center w-full lg:w-auto">
+              <CompatibilityList
+                items={compatibilityItems}
+                title="Documentos"
+                url="https://docs.astro.build/core-concepts/framework-components/"
+                direction="row"
+              />
+            </div>
+          </div>
+
+          <!-- EP content container -->
+          <div id="ep-content" class="relative z-10">
+            <!-- Content will be populated by JavaScript -->
+          </div>
+
+          <div class="flex justify-center mt-8">
+            <a
+              href={latestCiclo.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex flex-col items-center justify-center gap-1 border-2 border-primary bg-primary px-6 py-4 text-white hover:bg-default hover:text-primary transition-colors"
+            >
+              <span class="font-bold">Segue-nos no Instagram</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right column - Aesthetic Pictures -->
+        {rightSidePictures.length > 0 && (
+          <div class="hidden lg:flex w-1/6 flex-col gap-4 sticky top-8 self-start">
+            <div class="aesthetic-gallery right-gallery">
+              {rightSidePictures.map((pic, index) => (
+                <div
+                  class={`aesthetic-frame frame-${index + 1} clickable-frame`}
+                  style={`animation-delay: ${(index + 2) * 0.2}s`}
+                  data-image={getImageSrc(pic)}
+                  data-title={`Ciclo ${latestCiclo.number} - Imagem ${index + 1}`}
+                >
+                  <img
+                    src={getImageSrc(pic)}
+                    alt={`Aesthetic ${index + 1}`}
+                    class="aesthetic-image"
+                  />
+                  <div class="image-overlay"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </ContentSection>
   </div>
+
+  <!-- Image Modal -->
+  <ImageModal />
 </Layout>
+
+<script define:vars={{ latestCiclo, departmentGradients: DEPARTMENT_GRADIENTS, baseUrl: import.meta.env.BASE_URL }}>
+  document.addEventListener("DOMContentLoaded", function () {
+    const contentContainer = document.getElementById("ep-content");
+
+    // Function to fit text within container
+    function fitTextToContainer(element) {
+      const container = element.parentElement;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth - 20;
+      let fontSize = 20;
+      element.style.fontSize = fontSize + "px";
+
+      while (element.scrollWidth > containerWidth && fontSize > 12) {
+        fontSize -= 0.5;
+        element.style.fontSize = fontSize + "px";
+      }
+    }
+
+    // Function to add hover effects
+    function addHoverEffects(ciclo) {
+      const cards = contentContainer.querySelectorAll(".group");
+      cards.forEach((card) => {
+        const media = card.querySelector("img, video");
+        if (media) {
+          card.addEventListener("mouseenter", () => {
+            const hoverScale = ciclo.scale * 1.05;
+            media.style.transform = `scale(${hoverScale})`;
+            media.style.filter = "brightness(1.2)";
+            media.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
+          });
+
+          card.addEventListener("mouseleave", () => {
+            media.style.transform = `scale(${ciclo.scale})`;
+            media.style.filter = "";
+            media.style.transition = "transform 0.3s ease-in-out, filter 0.3s ease-in-out";
+          });
+        }
+      });
+    }
+
+    // Function to fit all text elements
+    function fitAllText() {
+      const nameElements = contentContainer.querySelectorAll(".name-text");
+      nameElements.forEach((element) => {
+        element.style.fontSize = "";
+        setTimeout(() => fitTextToContainer(element), 10);
+      });
+    }
+
+    function renderEP(ciclo) {
+      const departmentsHtml = Object.entries(ciclo.ep)
+        .filter(([key, departamento]) => departamento.members.length > 0)
+        .map(
+          ([key, departamento]) => `
+          <div class="flex flex-col items-center gap-4 mb-12">
+            <span class="text-primary text-2xl font-bold relative z-30">${departamento.name}</span>
+            <div class="flex flex-row flex-wrap justify-center gap-6 w-full">
+              ${departamento.members
+                .map(
+                  (member) => `
+                <div class="group relative w-full max-w-[300px] mb-10">
+                  ${member.cargo ? `
+                  <div class="bg-white rounded-2xl p-3 mt-[-2rem] absolute left-0 right-0 mx-auto w-[80%] text-center shadow-md name-container z-20">
+                    <p class="text-sm text-primary mb-1" style="overflow: hidden; text-overflow: ellipsis;">
+                      ${member.cargo}
+                    </p>
+                  </div>
+                  ` : ''}
+
+                  <div class="relative overflow-hidden rounded-md aspect-[5/6] ${departmentGradients[key]} z-10">
+                    ${member.image && member.image.endsWith('.mp4') ? `
+                      <video
+                        src="${baseUrl}${member.image}"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                        style="transform: scale(${ciclo.scale}); object-position: center ${50 + (ciclo.translateY * 0.3)}%;"
+                        class="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+                      ></video>
+                    ` : `
+                      <img
+                        src="${baseUrl}${member.image || 'pics/c_placeholder.png'}"
+                        alt="${member.name}"
+                        style="transform: scale(${ciclo.scale}); object-position: center ${50 + (ciclo.translateY * 0.3)}%;"
+                        class="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+                      />
+                    `}
+                  </div>
+                  <div class="bg-white rounded-2xl p-3 mt-[-2rem] absolute left-0 right-0 mx-auto w-[80%] text-center shadow-md name-container z-20">
+                    <h2 class="text-lg font-bold text-gray-900 mb-1 name-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      ${member.name}
+                    </h2>
+                    <p class="text-xs text-gray-500 mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      ${member.agrupamento}
+                    </p>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+        `
+        )
+        .join("");
+
+      const mainImageHtml = ciclo.image && ciclo.image.trim() !== "" ? `
+        <div class="aspect-[20/9] w-2/3 overflow-hidden justify-center items-center mx-auto mb-4 relative group">
+          <img
+              src="${baseUrl}${ciclo.image}"
+              alt="${ciclo.number}º Ciclo - ${ciclo.imaginario}"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <button
+            class="expand-ciclo-image absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 hover:text-gray-900 p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+            data-image="${baseUrl}${ciclo.image}"
+            data-title="${ciclo.image_description ? `${ciclo.image_description} do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}` : `EP do ${ciclo.number}º Ciclo - ${ciclo.imaginario} - ${ciclo.lema}`}"
+            aria-label="Expandir imagem"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+        </div>
+      ` : '';
+
+      contentContainer.innerHTML = `
+        <div class="mb-6">
+          ${mainImageHtml}
+        </div>
+        <div>
+          ${departmentsHtml}
+        </div>
+      `;
+
+      setTimeout(() => {
+        fitAllText();
+        addHoverEffects(ciclo);
+        addCicloImageClickListeners();
+      }, 50);
+    }
+
+    // Render the latest ciclo
+    renderEP(latestCiclo);
+
+    // Handle window resize to refit text
+    window.addEventListener("resize", () => {
+      setTimeout(fitAllText, 100);
+    });
+
+    // Initialize aesthetic galleries animations
+    function initAestheticGalleries() {
+      const galleries = document.querySelectorAll('.aesthetic-gallery');
+
+      galleries.forEach((gallery, galleryIndex) => {
+        const frames = gallery.querySelectorAll('.aesthetic-frame');
+
+        // Stagger the initial animations
+        frames.forEach((frame, index) => {
+          setTimeout(() => {
+            frame.style.opacity = '1';
+            frame.style.transform = 'translateY(0) rotate(0deg)';
+          }, (galleryIndex * 200) + (index * 150));
+        });
+      });
+    }
+
+    // Initialize galleries after a short delay
+    setTimeout(initAestheticGalleries, 300);
+
+    // Add click event listeners to aesthetic frames for modal functionality
+    function addFrameClickListeners() {
+      const clickableFrames = document.querySelectorAll('.clickable-frame');
+      clickableFrames.forEach(frame => {
+        frame.addEventListener('click', function() {
+          const imageSrc = frame.getAttribute('data-image');
+          const title = frame.getAttribute('data-title');
+          if (imageSrc && title && window.openImageModal) {
+            window.openImageModal(imageSrc, title);
+          }
+        });
+      });
+    }
+
+    // Add click event listeners to ciclo image expand buttons
+    function addCicloImageClickListeners() {
+      const expandButtons = document.querySelectorAll('.expand-ciclo-image');
+      expandButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.stopPropagation(); // Prevent any parent click events
+          const imageSrc = button.getAttribute('data-image');
+          const title = button.getAttribute('data-title');
+          if (imageSrc && title && window.openImageModal) {
+            window.openImageModal(imageSrc, title);
+          }
+        });
+      });
+    }
+
+    // Initialize click listeners
+    addFrameClickListeners();
+    addCicloImageClickListeners();
+  });
+</script>
+
+<style>
+  img, video {
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .name-container {
+    max-width: 100%;
+  }
+
+  .name-text {
+    display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 100%;
+    white-space: nowrap;
+    font-size: 0.875rem;
+  }
+
+  .name-text:not(.truncated) {
+    font-size: clamp(0.7rem, 4vw, 0.875rem);
+  }
+
+  /* Aesthetic Gallery Styles */
+  .aesthetic-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem 0;
+    width: 100%;
+    contain: layout; /* Prevent layout shifts */
+    justify-content: flex-start; /* Keep images at top */
+    padding-left: 3rem;
+  }
+
+  .aesthetic-frame {
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px) rotate(-2deg);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevent shrinking */
+    aspect-ratio: 4/3; /* Maintain consistent aspect ratio */
+  }
+
+  .aesthetic-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block;
+    flex-shrink: 0;
+    transition: all 0.4s ease;
+    filter: brightness(0.9) contrast(1.1);
+  }
+
+  .aesthetic-frame:hover .aesthetic-image {
+    filter: brightness(1) contrast(1.2);
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .flex.flex-col.lg\:flex-row.gap-4 {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg,
+      rgba(var(--primary-rgb, 59, 130, 246), 0.1),
+      rgba(var(--primary-rgb, 59, 130, 246), 0.05)
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .aesthetic-frame:hover .image-overlay {
+    opacity: 1;
+  }
+
+  /* Unique positioning for each frame */
+  .left-gallery .frame-1 {
+    transform: translateY(20px) rotate(-3deg);
+    margin-left: 10px;
+  }
+
+  .left-gallery .frame-2 {
+    transform: translateY(20px) rotate(2deg);
+    margin-right: 15px;
+  }
+
+  .left-gallery .frame-3 {
+    transform: translateY(20px) rotate(-1deg);
+    margin-left: 5px;
+  }
+
+  .left-gallery .frame-4 {
+    transform: translateY(20px) rotate(3deg);
+    margin-right: 10px;
+  }
+
+  .right-gallery .frame-1 {
+    transform: translateY(20px) rotate(2deg);
+    margin-right: 10px;
+  }
+
+  .right-gallery .frame-2 {
+    transform: translateY(20px) rotate(-3deg);
+    margin-left: 15px;
+  }
+
+  .right-gallery .frame-3 {
+    transform: translateY(20px) rotate(1deg);
+    margin-right: 5px;
+  }
+
+  .right-gallery .frame-4 {
+    transform: translateY(20px) rotate(-2deg);
+    margin-left: 10px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .aesthetic-gallery {
+      display: none;
+    }
+  }
+
+  /* Floating animation for subtle movement - disabled on hover */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(var(--rotation, 0deg)); }
+    50% { transform: translateY(-10px) rotate(var(--rotation, 0deg)); }
+  }
+
+  .aesthetic-frame:nth-child(odd):not(:hover) {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  .aesthetic-frame:nth-child(even):not(:hover) {
+    animation: float 8s ease-in-out infinite reverse;
+    animation-delay: var(--delay, 0s);
+  }
+
+  @container (max-width: 1024px) {
+    .aesthetic-gallery {
+      display: none;
+    }
+  }
+
+  /* Ensure side galleries maintain consistent width */
+  .w-1\/6 {
+    min-width: 16.666667%;
+    max-width: 16.666667%;
+    flex-shrink: 0;
+  }
+
+  /* Add some CSS custom properties for the rotations */
+  .left-gallery .frame-1 { --rotation: -3deg; --delay: 0s; }
+  .left-gallery .frame-2 { --rotation: 2deg; --delay: 1s; }
+  .left-gallery .frame-3 { --rotation: -1deg; --delay: 2s; }
+  .left-gallery .frame-4 { --rotation: 3deg; --delay: 3s; }
+
+  .right-gallery .frame-1 { --rotation: 2deg; --delay: 0.5s; }
+  .right-gallery .frame-2 { --rotation: -3deg; --delay: 1.5s; }
+  .right-gallery .frame-3 { --rotation: 1deg; --delay: 2.5s; }
+  .right-gallery .frame-4 { --rotation: -2deg; --delay: 3.5s; }
+
+  /* Clickable frame styles */
+  .clickable-frame {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .clickable-frame:hover {
+    transform: translateY(-8px) rotate(0deg) scale(1.08) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2) !important;
+    z-index: 10;
+    animation: none !important; /* Disable floating animation on hover */
+  }
+
+  .clickable-frame:active {
+    transform: translateY(-5px) rotate(0deg) scale(1.05) !important;
+    animation: none !important;
+  }
+</style>
 
