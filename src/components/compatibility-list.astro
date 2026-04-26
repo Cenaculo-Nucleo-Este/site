@@ -19,25 +19,25 @@ const { items, title, url, direction } = Astro.props;
     >
       {title}
     </h3>
-    <ul class={`flex ${
-      direction === 'responsive' 
-        ? 'flex-col md:flex-row' 
-        : direction === 'row' 
-          ? 'flex-row' 
+    <ul class={`flex flex-wrap ${
+      direction === 'responsive'
+        ? 'flex-col md:flex-row'
+        : direction === 'row'
+          ? 'flex-row'
           : 'flex-col'
-    } justify-center gap-6`}>
+    } justify-center gap-3 sm:gap-6`}>
       {
         items.map((item) => (
           <li>
             {item.url ? (
               <a class="flex flex-col justify-center items-center text-center text-default hover:text-primary transition-colors" href={item.url}>
-                <Icon class="size-8 text-primary" name={item.icon} />
-                <span>{item.title}</span>
+                <Icon class={`${direction === 'row' ? 'size-6 sm:size-8' : 'size-8'} text-primary`} name={item.icon} />
+                <span class={direction === 'row' ? 'text-xs sm:text-sm' : ''}>{item.title}</span>
               </a>
             ) : (
               <div class="flex flex-col items-center gap-2 text-default hover:text-primary transition-colors cursor-pointer">
-                <Icon class="size-8 text-primary" name={item.icon} />
-                <span>{item.title}</span>
+                <Icon class={`${direction === 'row' ? 'size-6 sm:size-8' : 'size-8'} text-primary`} name={item.icon} />
+                <span class={direction === 'row' ? 'text-xs sm:text-sm' : ''}>{item.title}</span>
               </div>
             )}
           </li>
