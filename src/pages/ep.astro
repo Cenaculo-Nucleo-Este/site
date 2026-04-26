@@ -5,7 +5,7 @@ import ImageModal from "~/components/ImageModal.astro";
 import CompatibilityList from "~/components/compatibility-list.astro";
 import { DEPARTMENT_GRADIENTS } from "~/types";
 import type { CompatibilityItem } from "~/types";
-import ciclosData from "../../public/ciclos.json" assert { type: "json" };
+import ciclosData from "../../public/ciclos.json" with { type: "json" };
 
 // Get the latest ciclo (first in the array)
 const latestCiclo = ciclosData.ciclos[0];
@@ -24,6 +24,26 @@ const createCompatibilityItems = (ciclo: any): Array<CompatibilityItem> => [
     title: "Fotos Pŕe",
     icon: "camera",
     url: ciclo.prePicturesLink,
+  },
+  {
+    title: "Fotos Cenáculo",
+    icon: "camera",
+    url: ciclo.picturesLink,
+  },
+  {
+    title: "Carta do Ciclo",
+    icon: "book",
+    url: ciclo.carta,
+  },
+  {
+    title: "Hino do Ciclo",
+    icon: "music",
+    url: ciclo.hino,
+  },
+  {
+    title: "Letra do Hino",
+    icon: "book",
+    url: ciclo.letra,
   }
 ];
 

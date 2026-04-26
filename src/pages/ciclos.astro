@@ -2,7 +2,7 @@
 import Layout from "~/components/Layout.astro";
 import ContentSection from "~/components/content-section.astro";
 import { DEPARTMENT_GRADIENTS } from "~/types";
-import ciclosData from "../../public/ciclos.json" assert { type: "json" };
+import ciclosData from "../../public/ciclos.json" with { type: "json" };
 import CiclosInfo from "~/components/ciclos-info.astro";
 import CompatibilityList from "~/components/compatibility-list.astro";
 import CicloDropdown from "~/components/CicloDropdown.astro";
