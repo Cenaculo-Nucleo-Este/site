@@ -1,0 +1,1209 @@
+---
+// Admin page — edit public/ciclos.json and public/clas.json directly from the
+// browser and commit back to GitHub (which triggers the GitHub Pages deploy).
+//
+// This page is fully client-side and contains NO secret: the person using it
+// pastes their own GitHub fine-grained token, stored only in their browser
+// (localStorage). The repo can stay public.
+//
+// Reachable at:  <site>/site/admin
+---
+
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link
+      rel="icon"
+      href={`${import.meta.env.BASE_URL}circle_cenaculo.png`}
+      type="image/png"
+    />
+    <title>Administração — Cenáculo Núcleo Este</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      const REPO_OWNER = "Cenaculo-Nucleo-Este";
+      const REPO_NAME = "site";
+      const BRANCH = "main";
+      const CICLOS_PATH = "public/ciclos.json";
+      const CLAS_PATH = "public/clas.json";
+      const PICS_ROOT = "public/pics";
+      const CLAS_ROOT = "public/clas";
+      const BASE_URL = import.meta.env.BASE_URL; // e.g. "/site/"
+      const TOKEN_KEY = "cne_admin_gh_token";
+      const ACTIONS_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}/actions`;
+
+      const DEPARTMENTS = [
+        ["coordination", "Coordenação"],
+        ["forum", "Fórum"],
+        ["logistica", "Logística"],
+        ["communication", "Comunicação"],
+        ["animation", "Animação"],
+        ["observadores", "Observadores"],
+        ["embaixador", "Embaixador"],
+      ];
+
+      const TEXT_FIELDS = [
+        ["number", "Número do ciclo (romano)", "Ex: XVII"],
+        ["year", "Ano", "Ex: 2026/2027"],
+        ["imaginario", "Imaginário", "Ex: Soul"],
+        ["lema", "Lema", "Ex: Dá vida à tua Alma"],
+      ];
+
+      const LINK_FIELDS = [
+        ["carta", "Carta (link)"],
+        ["hino", "Hino — YouTube (link)"],
+        ["letra", "Letra do hino (link)"],
+        ["instagram", "Instagram (link)"],
+        ["picturesLink", "Fotos (link)"],
+        ["prePicturesLink", "Fotos Pré (link)"],
+        ["musica_forum", "Música do Fórum (link)"],
+        ["site", "Site do ciclo (link)"],
+      ];
+
+      let token = localStorage.getItem(TOKEN_KEY) || "";
+      let ciclosData = null;
+      let clasData = null;
+      let editIndex = null; // ciclos: null = new, else index
+      let folderAuto = true;
+      let currentTab = "ciclos";
+
+      // ---- tiny helpers -------------------------------------------------------
+      const $ = (id) => document.getElementById(id);
+      const val = (id) => {
+        const e = $(id);
+        return e ? e.value : "";
+      };
+      function el(html) {
+        const t = document.createElement("template");
+        t.innerHTML = html.trim();
+        return t.content.firstElementChild;
+      }
+      function escHtml(s) {
+        return (s == null ? "" : String(s))
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function escAttr(s) {
+        return (s == null ? "" : String(s))
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;");
+      }
+      function sanitize(name) {
+        return name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .replace(/[^a-z0-9._-]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      // ---- UTF-8 <-> base64 ---------------------------------------------------
+      function utf8ToBase64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let bin = "";
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        return btoa(bin);
+      }
+      function base64ToUtf8(b64) {
+        const bin = atob(b64.replace(/\s/g, ""));
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+      }
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result).split(",")[1]);
+          r.onerror = reject;
+          r.readAsDataURL(file);
+        });
+      }
+
+      // ---- GitHub API ---------------------------------------------------------
+      async function gh(path, opts = {}) {
+        const res = await fetch(`https://api.github.com${path}`, {
+          ...opts,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            ...(opts.body ? { "Content-Type": "application/json" } : {}),
+            ...(opts.headers || {}),
+          },
+        });
+        if (!res.ok) {
+          let msg = `${res.status} ${res.statusText}`;
+          try {
+            const j = await res.json();
+            if (j && j.message) msg += ` — ${j.message}`;
+          } catch (e) {}
+          throw new Error(msg);
+        }
+        if (res.status === 204) return null;
+        return res.json();
+      }
+
+      async function loadJson(path) {
+        const file = await gh(
+          `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`
+        );
+        return JSON.parse(base64ToUtf8(file.content));
+      }
+
+      async function loadAll() {
+        ciclosData = await loadJson(CICLOS_PATH);
+        if (!ciclosData.ciclos) ciclosData.ciclos = [];
+        clasData = await loadJson(CLAS_PATH);
+      }
+
+      // ---- status -------------------------------------------------------------
+      function setStatus(msg, type = "info") {
+        const s = $("status");
+        if (!s) return;
+        s.className = `status ${type}`;
+        s.innerHTML = msg;
+        s.style.display = msg ? "block" : "none";
+        if (msg) s.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // ---- shared: uploads + commit ------------------------------------------
+      const uploads = []; // {jsonPath, repoPath, file}
+      const usedPaths = new Set();
+
+      function registerUpload(file, jsonDir, repoDir) {
+        const clean = sanitize(file.name) || "ficheiro";
+        const dot = clean.lastIndexOf(".");
+        const stem = dot > 0 ? clean.slice(0, dot) : clean;
+        const ext = dot > 0 ? clean.slice(dot) : "";
+        let name = clean;
+        let jsonPath = `${jsonDir}/${name}`;
+        let i = 1;
+        while (usedPaths.has(jsonPath)) {
+          name = `${stem}-${i}${ext}`;
+          jsonPath = `${jsonDir}/${name}`;
+          i++;
+        }
+        usedPaths.add(jsonPath);
+        uploads.push({ jsonPath, repoPath: `${repoDir}/${name}`, file });
+        return jsonPath;
+      }
+
+      function collectFileRow(row, jsonDir, repoDir) {
+        if (!row) return "";
+        const file = row.querySelector("input[type=file]").files[0];
+        if (file) return registerUpload(file, jsonDir, repoDir);
+        return row.dataset.existing || "";
+      }
+
+      // Atomic commit: uploads (binary) + text files, all in ONE commit.
+      async function commitAll({ textFiles, message, onProg }) {
+        const total = uploads.length + textFiles.length + 4;
+        let step = 0;
+        const bump = (m) => {
+          step++;
+          onProg(`(${step}/${total}) ${m}`);
+        };
+
+        const R = `/repos/${REPO_OWNER}/${REPO_NAME}`;
+        bump("A ler o estado atual do repositório...");
+        const ref = await gh(`${R}/git/ref/heads/${BRANCH}`);
+        const latest = ref.object.sha;
+        const baseCommit = await gh(`${R}/git/commits/${latest}`);
+        const baseTree = baseCommit.tree.sha;
+
+        const tree = [];
+        for (const u of uploads) {
+          bump(`A enviar imagem: ${u.file.name}`);
+          const b64 = await fileToBase64(u.file);
+          const blob = await gh(`${R}/git/blobs`, {
+            method: "POST",
+            body: JSON.stringify({ content: b64, encoding: "base64" }),
+          });
+          tree.push({
+            path: u.repoPath,
+            mode: "100644",
+            type: "blob",
+            sha: blob.sha,
+          });
+        }
+        for (const tf of textFiles) {
+          bump("A preparar os dados...");
+          const blob = await gh(`${R}/git/blobs`, {
+            method: "POST",
+            body: JSON.stringify({
+              content: utf8ToBase64(tf.content),
+              encoding: "base64",
+            }),
+          });
+          tree.push({
+            path: tf.path,
+            mode: "100644",
+            type: "blob",
+            sha: blob.sha,
+          });
+        }
+
+        bump("A criar a alteração...");
+        const newTree = await gh(`${R}/git/trees`, {
+          method: "POST",
+          body: JSON.stringify({ base_tree: baseTree, tree }),
+        });
+        const commit = await gh(`${R}/git/commits`, {
+          method: "POST",
+          body: JSON.stringify({
+            message,
+            tree: newTree.sha,
+            parents: [latest],
+          }),
+        });
+        bump("A publicar...");
+        await gh(`${R}/git/refs/heads/${BRANCH}`, {
+          method: "PATCH",
+          body: JSON.stringify({ sha: commit.sha }),
+        });
+        return commit.sha;
+      }
+
+      function tooBig() {
+        const big = uploads.find((u) => u.file.size > 40 * 1024 * 1024);
+        if (big) {
+          setStatus(
+            `O ficheiro <b>${escHtml(big.file.name)}</b> é demasiado grande (máx. ~40 MB). Comprime-o e tenta de novo.`,
+            "error"
+          );
+          return true;
+        }
+        return false;
+      }
+
+      // ---- shared file-picker row --------------------------------------------
+      function fileRow(existing, accept) {
+        const row = el(`
+          <div class="frow" data-existing="${escAttr(existing || "")}">
+            <label class="filebtn">Escolher ficheiro
+              <input type="file" accept="${accept}" hidden />
+            </label>
+            <span class="curimg"></span>
+            <button type="button" class="rm" title="Remover">✕</button>
+          </div>`);
+        const cur = row.querySelector(".curimg");
+        updateCur(cur, existing || "", null);
+        row.querySelector("input[type=file]").addEventListener("change", (e) => {
+          updateCur(cur, row.dataset.existing || "", e.target.files[0] || null);
+        });
+        return row;
+      }
+
+      function updateCur(span, existing, file) {
+        if (file) {
+          const isVid =
+            (file.type && file.type.startsWith("video")) ||
+            /\.mp4$/i.test(file.name);
+          span.innerHTML = isVid
+            ? `🎬 ${escHtml(file.name)} <span class="tag new">novo</span>`
+            : `<img class="thumb" src="${URL.createObjectURL(file)}" alt=""/> ${escHtml(file.name)} <span class="tag new">novo</span>`;
+        } else if (existing) {
+          const isVid = /\.mp4$/i.test(existing);
+          span.innerHTML = isVid
+            ? `🎬 <span class="muted">atual:</span> ${escHtml(existing)}`
+            : `<img class="thumb" src="${BASE_URL}${escAttr(existing)}" alt=""/> <span class="muted">imagem atual</span>`;
+        } else {
+          span.innerHTML = `<span class="muted">sem imagem</span>`;
+        }
+      }
+
+      // ---- login --------------------------------------------------------------
+      function renderLogin(errorMsg) {
+        $("app").innerHTML = `
+          <div class="wrap">
+            <div class="card login">
+              <img class="logo" src="${BASE_URL}circle_cenaculo.png" alt="" />
+              <h1>Administração</h1>
+              <p class="muted">Editar os ciclos e os clãs do site. Precisas de um <b>token do GitHub</b> (instruções abaixo).</p>
+              ${errorMsg ? `<div class="status error">${escHtml(errorMsg)}</div>` : ""}
+              <label class="lbl">Token de acesso do GitHub</label>
+              <input id="tokenInput" class="inp" type="password" placeholder="github_pat_..." autocomplete="off" />
+              <button id="loginBtn" class="btn primary" style="margin-top:12px;width:100%">Entrar</button>
+
+              <details class="help">
+                <summary>Como obter o token (só é preciso uma vez)</summary>
+                <ol>
+                  <li>Entra no GitHub e abre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Developer settings → Fine-grained tokens</a>.</li>
+                  <li>Em <b>Resource owner</b> escolhe <b>${REPO_OWNER}</b>.</li>
+                  <li>Em <b>Repository access</b>: <b>Only select repositories → ${REPO_NAME}</b>.</li>
+                  <li>Em <b>Repository permissions → Contents</b> escolhe <b>Read and write</b>.</li>
+                  <li>Clica <b>Generate token</b>, copia-o e cola aqui em cima.</li>
+                </ol>
+                <p class="muted">Se a organização exigir aprovação, um administrador do GitHub tem de aprovar o token antes de funcionar.</p>
+              </details>
+            </div>
+          </div>`;
+        $("loginBtn").addEventListener("click", doLogin);
+        $("tokenInput").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") doLogin();
+        });
+      }
+
+      async function doLogin() {
+        const t = $("tokenInput").value.trim();
+        if (!t) return;
+        const btn = $("loginBtn");
+        btn.disabled = true;
+        btn.textContent = "A verificar...";
+        try {
+          token = t;
+          await gh(`/repos/${REPO_OWNER}/${REPO_NAME}`);
+          localStorage.setItem(TOKEN_KEY, t);
+          await loadAll();
+          renderApp();
+        } catch (e) {
+          token = "";
+          renderLogin(
+            "Não foi possível entrar: " +
+              e.message +
+              " (verifica o token e as permissões)."
+          );
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem(TOKEN_KEY);
+        token = "";
+        ciclosData = clasData = null;
+        renderLogin();
+      }
+
+      // ---- app shell + tabs ---------------------------------------------------
+      function renderApp() {
+        $("app").innerHTML = `
+          <div class="topbar">
+            <div class="topbar-in">
+              <span class="brand"><img src="${BASE_URL}circle_cenaculo.png" alt=""/> Administração</span>
+              <div class="tabs">
+                <button class="tab" data-tab="ciclos">Ciclos</button>
+                <button class="tab" data-tab="clas">Clãs</button>
+              </div>
+              <button id="logoutBtn" class="btn ghost">Sair</button>
+            </div>
+          </div>
+          <div class="wrap"><div id="tabContent"></div></div>`;
+        $("logoutBtn").addEventListener("click", logout);
+        document.querySelectorAll(".tab").forEach((b) =>
+          b.addEventListener("click", () => showTab(b.dataset.tab))
+        );
+        showTab(currentTab);
+      }
+
+      function showTab(name) {
+        currentTab = name;
+        document
+          .querySelectorAll(".tab")
+          .forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+        if (name === "ciclos") renderCiclosTab();
+        else renderClasTab();
+      }
+
+      const saveCard = (btnId, label, extra = "") => `
+        <div class="card save-card">
+          <div id="status" class="status" style="display:none"></div>
+          ${extra}
+          <button id="${btnId}" class="btn primary big">${label}</button>
+          <p class="muted" style="margin-top:10px">
+            Depois de guardar, o site atualiza sozinho em 1–2 minutos.
+            Progresso em <a href="${ACTIONS_URL}" target="_blank" rel="noopener">GitHub Actions</a>.
+          </p>
+        </div>`;
+
+      // =========================================================================
+      //  CICLOS
+      // =========================================================================
+      function renderCiclosTab() {
+        $("tabContent").innerHTML = `
+          <div class="card">
+            <label class="lbl">O que queres fazer?</label>
+            <select id="cicloSelect" class="inp"></select>
+          </div>
+          <div id="formArea"></div>
+          ${saveCard("saveCicloBtn", "Guardar e publicar ciclo")}`;
+        refreshCicloSelect();
+        $("cicloSelect").addEventListener("change", () => {
+          const v = $("cicloSelect").value;
+          loadCicloIntoForm(v === "new" ? null : parseInt(v, 10));
+        });
+        $("saveCicloBtn").addEventListener("click", saveCiclo);
+        loadCicloIntoForm(null);
+      }
+
+      function refreshCicloSelect(selectValue) {
+        const sel = $("cicloSelect");
+        sel.innerHTML =
+          `<option value="new">➕ Novo ciclo</option>` +
+          ciclosData.ciclos
+            .map(
+              (c, i) =>
+                `<option value="${i}">✏️ Editar — ${escAttr(c.number)}º Ciclo (${escAttr(c.year || "")})</option>`
+            )
+            .join("");
+        if (selectValue != null) sel.value = String(selectValue);
+      }
+
+      function loadCicloIntoForm(index) {
+        editIndex = index;
+        folderAuto = index == null;
+        buildCicloForm(index == null ? {} : ciclosData.ciclos[index]);
+      }
+
+      function galleryCard(title, id, items) {
+        const card = el(`
+          <div class="card">
+            <h2>${title}</h2>
+            <div class="gal" id="${id}"></div>
+            <button type="button" class="btn small add-gal">+ Imagem</button>
+          </div>`);
+        const holder = card.querySelector(".gal");
+        (items || []).forEach((p) => {
+          const fr = fileRow(p, "image/*");
+          fr.querySelector(".rm").addEventListener("click", () => fr.remove());
+          holder.appendChild(fr);
+        });
+        card.querySelector(".add-gal").addEventListener("click", () => {
+          const fr = fileRow("", "image/*");
+          fr.querySelector(".rm").addEventListener("click", () => fr.remove());
+          holder.appendChild(fr);
+        });
+        return card;
+      }
+
+      function memberRow(m = {}) {
+        const row = el(`
+          <div class="member">
+            <div class="member-grid">
+              <input class="inp m-name" placeholder="Nome" value="${escAttr(m.name)}" />
+              <input class="inp m-agr" placeholder="Agrupamento" value="${escAttr(m.agrupamento)}" />
+              <input class="inp m-cargo" placeholder="Cargo (opcional)" value="${escAttr(m.cargo)}" />
+            </div>
+          </div>`);
+        const fr = fileRow(
+          typeof m.image === "string" ? m.image : "",
+          "image/*,video/mp4"
+        );
+        fr.querySelector(".rm").addEventListener("click", () => row.remove());
+        row.appendChild(fr);
+        return row;
+      }
+
+      function buildCicloForm(c) {
+        const ep = c.ep || {};
+        const area = $("formArea");
+        area.innerHTML = "";
+
+        const general = el(`
+          <div class="card">
+            <h2>Informação geral</h2>
+            <div class="grid2" id="generalGrid"></div>
+            <label class="lbl">Pasta das imagens no site</label>
+            <input id="f_folder" class="inp" value="${escAttr(c.number ? String(c.number).toLowerCase() : "")}" placeholder="ex: xvii" />
+            <p class="muted">As fotos deste ciclo ficam em <code>pics/&lt;pasta&gt;/</code>. Normalmente é o número em minúsculas.</p>
+          </div>`);
+        area.appendChild(general);
+        const gGrid = general.querySelector("#generalGrid");
+        for (const [key, label, ph] of TEXT_FIELDS) {
+          gGrid.appendChild(
+            el(`<div class="field">
+              <label class="lbl">${label}</label>
+              <input id="f_${key}" class="inp" placeholder="${escAttr(ph)}" value="${escAttr(c[key])}" />
+            </div>`)
+          );
+        }
+        $("f_folder").addEventListener("input", () => (folderAuto = false));
+        $("f_number").addEventListener("input", (e) => {
+          if (folderAuto) $("f_folder").value = sanitize(e.target.value);
+        });
+
+        // main image
+        const mainCard = el(`
+          <div class="card">
+            <h2>Imagem principal</h2>
+            <div id="mainImgHolder"></div>
+            <label class="lbl" style="margin-top:12px">Descrição da imagem (opcional)</label>
+            <input id="f_image_description" class="inp" value="${escAttr(c.image_description)}" />
+          </div>`);
+        area.appendChild(mainCard);
+        const mainRow = fileRow(typeof c.image === "string" ? c.image : "", "image/*");
+        mainRow.id = "mainImgRow";
+        mainRow.querySelector(".rm").addEventListener("click", () => {
+          mainRow.dataset.existing = "";
+          mainRow.querySelector("input[type=file]").value = "";
+          updateCur(mainRow.querySelector(".curimg"), "", null);
+        });
+        mainCard.querySelector("#mainImgHolder").appendChild(mainRow);
+
+        // links
+        const linksCard = el(`<div class="card"><h2>Links e documentos</h2><div class="grid2" id="linksGrid"></div></div>`);
+        area.appendChild(linksCard);
+        const lGrid = linksCard.querySelector("#linksGrid");
+        for (const [key, label] of LINK_FIELDS) {
+          lGrid.appendChild(
+            el(`<div class="field">
+              <label class="lbl">${label}</label>
+              <input id="f_${key}" class="inp" value="${escAttr(c[key])}" placeholder="https://..." />
+            </div>`)
+          );
+        }
+
+        area.appendChild(galleryCard("Galeria esquerda", "leftGal", c.leftSidePictures));
+        area.appendChild(galleryCard("Galeria direita", "rightGal", c.rightSidePictures));
+
+        area.appendChild(
+          el(`
+          <div class="card">
+            <h2>Ajustes de imagem</h2>
+            <div class="grid2">
+              <div class="field">
+                <label class="lbl">Escala (scale)</label>
+                <input id="f_scale" class="inp" type="number" step="0.01" value="${c.scale != null ? c.scale : 1}" />
+              </div>
+              <div class="field">
+                <label class="lbl">Deslocamento vertical (translateY)</label>
+                <input id="f_translateY" class="inp" type="number" step="1" value="${c.translateY != null ? c.translateY : 0}" />
+              </div>
+            </div>
+            <p class="muted">Deixa em 1 e 0 se não sabes o que são. Servem para enquadrar as fotos da EP.</p>
+          </div>`)
+        );
+
+        const epCard = el(`<div class="card"><h2>Equipa Projeto (EP)</h2><div id="epHolder"></div></div>`);
+        area.appendChild(epCard);
+        const epHolder = epCard.querySelector("#epHolder");
+        for (const [key, label] of DEPARTMENTS) {
+          const dept = ep[key] || {};
+          const card = el(`
+            <div class="dept" data-key="${key}">
+              <div class="dept-head">
+                <input class="inp dept-name" value="${escAttr(dept.name || label)}" />
+                <button type="button" class="btn small add-member">+ Membro</button>
+              </div>
+              <div class="members"></div>
+            </div>`);
+          const members = card.querySelector(".members");
+          (dept.members || []).forEach((m) => members.appendChild(memberRow(m)));
+          card.querySelector(".add-member").addEventListener("click", () => {
+            members.appendChild(memberRow({}));
+          });
+          epHolder.appendChild(card);
+        }
+
+        setStatus("");
+      }
+
+      function buildCicloObject(folder) {
+        const picsDir = `pics/${folder}`;
+        const picsRepo = `${PICS_ROOT}/${folder}`;
+        const epDir = `pics/${folder}/ep`;
+        const epRepo = `${PICS_ROOT}/${folder}/ep`;
+
+        const c = {};
+        c.number = val("f_number").trim();
+        c.year = val("f_year").trim();
+        c.imaginario = val("f_imaginario").trim() || null;
+        c.lema = val("f_lema").trim();
+
+        c.image = collectFileRow($("mainImgRow"), picsDir, picsRepo);
+        const desc = val("f_image_description").trim();
+        if (desc) c.image_description = desc;
+
+        for (const [key] of LINK_FIELDS) c[key] = val(`f_${key}`).trim() || null;
+
+        c.scale = parseFloat(val("f_scale"));
+        if (!isFinite(c.scale)) c.scale = 1;
+        c.translateY = parseFloat(val("f_translateY"));
+        if (!isFinite(c.translateY)) c.translateY = 0;
+
+        const left = [...$("leftGal").querySelectorAll(".frow")]
+          .map((r) => collectFileRow(r, picsDir, picsRepo))
+          .filter(Boolean);
+        const right = [...$("rightGal").querySelectorAll(".frow")]
+          .map((r) => collectFileRow(r, picsDir, picsRepo))
+          .filter(Boolean);
+        c.leftSidePictures = left.length ? left : null;
+        c.rightSidePictures = right.length ? right : null;
+
+        c.ep = {};
+        for (const [key, label] of DEPARTMENTS) {
+          const card = document.querySelector(`.dept[data-key="${key}"]`);
+          const name = card.querySelector(".dept-name").value.trim() || label;
+          const members = [];
+          card.querySelectorAll(".member").forEach((row) => {
+            const mname = row.querySelector(".m-name").value.trim();
+            if (!mname) return;
+            members.push({
+              name: mname,
+              agrupamento: row.querySelector(".m-agr").value.trim(),
+              image: collectFileRow(row.querySelector(".frow"), epDir, epRepo),
+              cargo: row.querySelector(".m-cargo").value.trim() || null,
+            });
+          });
+          c.ep[key] = { name, members };
+        }
+        return c;
+      }
+
+      async function saveCiclo() {
+        uploads.length = 0;
+        usedPaths.clear();
+
+        const folder = sanitize(val("f_folder").trim());
+        const number = val("f_number").trim();
+        const year = val("f_year").trim();
+
+        if (!number || !year)
+          return setStatus("Preenche pelo menos o <b>número</b> e o <b>ano</b> do ciclo.", "error");
+        if (!folder)
+          return setStatus("Indica a <b>pasta das imagens</b> (ex: xvii).", "error");
+        if (editIndex == null && ciclosData.ciclos.some((c) => c.number === number))
+          return setStatus(
+            `Já existe um ciclo <b>${escHtml(number)}</b>. Escolhe-o na lista para o editar.`,
+            "error"
+          );
+
+        const ciclo = buildCicloObject(folder);
+        if (tooBig()) return;
+
+        if (
+          !confirm(
+            editIndex == null
+              ? `Publicar o novo ciclo ${number}?`
+              : `Guardar as alterações ao ciclo ${number}?`
+          )
+        )
+          return;
+
+        const btn = $("saveCicloBtn");
+        btn.disabled = true;
+        try {
+          if (editIndex == null) ciclosData.ciclos.unshift(ciclo);
+          else ciclosData.ciclos[editIndex] = ciclo;
+
+          await commitAll({
+            textFiles: [
+              { path: CICLOS_PATH, content: JSON.stringify(ciclosData, null, 2) + "\n" },
+            ],
+            message:
+              (editIndex == null ? "Adicionar" : "Atualizar") +
+              ` ciclo ${number} (via admin)`,
+            onProg: (m) => setStatus(m, "info"),
+          });
+
+          setStatus(
+            `✅ Guardado! O site atualiza em 1–2 minutos.<br/>
+             <a href="https://cenaculonucleoeste.github.io/site/ciclos" target="_blank" rel="noopener">Ver ciclos</a> ·
+             <a href="${ACTIONS_URL}" target="_blank" rel="noopener">progresso</a>`,
+            "success"
+          );
+          editIndex = editIndex == null ? 0 : editIndex;
+          refreshCicloSelect(editIndex);
+        } catch (e) {
+          setStatus(
+            "❌ Erro ao guardar: " + escHtml(e.message) + "<br/>Nada foi publicado. Recarrega a página e tenta de novo.",
+            "error"
+          );
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // =========================================================================
+      //  CLÃS
+      // =========================================================================
+      function renderClasTab() {
+        $("tabContent").innerHTML = `
+          <div class="card">
+            <button id="addClaBtn" class="btn small">+ Novo clã</button>
+            <p class="muted" style="margin-top:8px">Cada clã pertence a uma <b>região/concelho</b>. Desmarca "Ativo" para o esconder do site sem o apagar.</p>
+          </div>
+          <div id="clasHolder"></div>
+          ${saveCard("saveClasBtn", "Guardar e publicar clãs")}`;
+        const holder = $("clasHolder");
+        for (const region of Object.keys(clasData)) {
+          for (const cla of clasData[region]) {
+            holder.appendChild(claCard(region, cla));
+          }
+        }
+        $("addClaBtn").addEventListener("click", () => {
+          holder.insertBefore(claCard("", {}), holder.firstChild);
+          holder.firstChild.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+        $("saveClasBtn").addEventListener("click", saveClas);
+        setStatus("");
+      }
+
+      function claCard(region, c) {
+        c = c || {};
+        const card = el(`
+          <div class="card cla-card">
+            <div class="cla-head">
+              <input class="inp c-region" placeholder="Região / Concelho" value="${escAttr(region)}" />
+              <label class="chk"><input type="checkbox" class="c-ativo" ${c.ativo === false ? "" : "checked"} /> Ativo</label>
+              <button type="button" class="btn small rm-cla">Remover</button>
+            </div>
+            <div class="grid2">
+              <div class="field"><label class="lbl">Nome do clã</label><input class="inp c-name" value="${escAttr(c.name)}" placeholder="Ex: Clã 73" /></div>
+              <div class="field"><label class="lbl">Agrupamento</label><input class="inp c-agr" value="${escAttr(c.agrupamento)}" placeholder="Ex: 680 Santão" /></div>
+              <div class="field"><label class="lbl">Instagram</label><input class="inp c-insta" value="${escAttr(c.instagram)}" placeholder="https://..." /></div>
+              <div class="field"><label class="lbl">Facebook</label><input class="inp c-fb" value="${escAttr(c.facebook)}" placeholder="https://..." /></div>
+              <div class="field"><label class="lbl">Email</label><input class="inp c-email" value="${escAttr(c.email)}" /></div>
+              <div class="field"></div>
+              <div class="field"><label class="lbl">Latitude</label><input class="inp c-lat" value="${c.coordinates ? c.coordinates.latitude : ""}" placeholder="41.31" /></div>
+              <div class="field"><label class="lbl">Longitude</label><input class="inp c-lng" value="${c.coordinates ? c.coordinates.longitude : ""}" placeholder="-8.16" /></div>
+            </div>
+            <label class="lbl">Descrição</label>
+            <textarea class="inp c-desc" rows="2">${escHtml(c.description)}</textarea>
+            <label class="lbl" style="margin-top:10px">Imagem do clã</label>
+            <div class="cla-img"></div>
+          </div>`);
+        const fr = fileRow(typeof c.image === "string" ? c.image : "", "image/*");
+        fr.querySelector(".rm").addEventListener("click", () => {
+          fr.dataset.existing = "";
+          fr.querySelector("input[type=file]").value = "";
+          updateCur(fr.querySelector(".curimg"), "", null);
+        });
+        card.querySelector(".cla-img").appendChild(fr);
+        card.querySelector(".rm-cla").addEventListener("click", () => {
+          if (confirm("Remover este clã?")) card.remove();
+        });
+        return card;
+      }
+
+      async function saveClas() {
+        uploads.length = 0;
+        usedPaths.clear();
+
+        const cards = [...$("clasHolder").querySelectorAll(".cla-card")];
+        const grouped = {};
+        for (const card of cards) {
+          const region = card.querySelector(".c-region").value.trim();
+          const name = card.querySelector(".c-name").value.trim();
+          if (!region || !name)
+            return setStatus("Cada clã precisa de <b>região</b> e <b>nome</b>.", "error");
+
+          const lat = parseFloat(card.querySelector(".c-lat").value);
+          const lng = parseFloat(card.querySelector(".c-lng").value);
+          const coordinates =
+            isFinite(lat) && isFinite(lng)
+              ? { latitude: lat, longitude: lng }
+              : null;
+          const image =
+            collectFileRow(card.querySelector(".frow"), "clas", CLAS_ROOT) || null;
+          const ativo = card.querySelector(".c-ativo").checked;
+
+          const cla = {
+            name,
+            agrupamento: card.querySelector(".c-agr").value.trim(),
+            description: card.querySelector(".c-desc").value.trim(),
+            image,
+            instagram: card.querySelector(".c-insta").value.trim() || null,
+            facebook: card.querySelector(".c-fb").value.trim() || null,
+            email: card.querySelector(".c-email").value.trim() || null,
+          };
+          if (!ativo) cla.ativo = false;
+          cla.coordinates = coordinates;
+
+          (grouped[region] = grouped[region] || []).push(cla);
+        }
+
+        if (tooBig()) return;
+        if (!confirm("Guardar as alterações aos clãs?")) return;
+
+        const btn = $("saveClasBtn");
+        btn.disabled = true;
+        try {
+          await commitAll({
+            textFiles: [
+              { path: CLAS_PATH, content: JSON.stringify(grouped, null, 2) + "\n" },
+            ],
+            message: "Atualizar clãs (via admin)",
+            onProg: (m) => setStatus(m, "info"),
+          });
+          clasData = grouped;
+          setStatus(
+            `✅ Guardado! O site atualiza em 1–2 minutos.<br/>
+             <a href="https://cenaculonucleoeste.github.io/site/clas" target="_blank" rel="noopener">Ver clãs</a> ·
+             <a href="${ACTIONS_URL}" target="_blank" rel="noopener">progresso</a>`,
+            "success"
+          );
+        } catch (e) {
+          setStatus(
+            "❌ Erro ao guardar: " + escHtml(e.message) + "<br/>Nada foi publicado. Recarrega a página e tenta de novo.",
+            "error"
+          );
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ---- boot ---------------------------------------------------------------
+      async function boot() {
+        if (!token) return renderLogin();
+        try {
+          await gh(`/repos/${REPO_OWNER}/${REPO_NAME}`);
+          await loadAll();
+          renderApp();
+        } catch (e) {
+          renderLogin("A sessão expirou ou o token deixou de ser válido.");
+        }
+      }
+      boot();
+    </script>
+
+    <style is:global>
+      :root {
+        --red: #b71719;
+        --red-dark: #8e1113;
+        --bg: #f5f5f7;
+        --card: #ffffff;
+        --line: #e4e4e7;
+        --text: #1c1c1e;
+        --muted: #71717a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--red);
+      }
+      code {
+        background: #eee;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 20px 16px 80px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .card h2 {
+        margin: 0 0 14px;
+        font-size: 1.1rem;
+        color: var(--red);
+      }
+      h1 {
+        margin: 6px 0 4px;
+        font-size: 1.5rem;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+      .lbl {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin: 10px 0 4px;
+      }
+      .inp {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        font-size: 0.95rem;
+        background: #fff;
+        color: var(--text);
+        font-family: inherit;
+      }
+      textarea.inp {
+        resize: vertical;
+      }
+      .inp:focus {
+        outline: none;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(183, 23, 25, 0.12);
+      }
+      select.inp {
+        appearance: auto;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+      }
+      .field {
+        min-width: 0;
+      }
+      @media (max-width: 640px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .btn {
+        border: none;
+        border-radius: 9px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #eee;
+        color: var(--text);
+      }
+      .btn.primary {
+        background: var(--red);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: var(--red-dark);
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        color: #fff;
+      }
+      .btn.small {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+      .btn.big {
+        width: 100%;
+        padding: 14px;
+        font-size: 1.05rem;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .topbar {
+        background: var(--red);
+        color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .topbar-in {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+      .brand img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+      }
+      .tab {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: #fff;
+        color: var(--red);
+      }
+      .login {
+        max-width: 440px;
+        margin: 8vh auto 0;
+        text-align: center;
+      }
+      .login .logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+      }
+      .login .lbl,
+      .login .help {
+        text-align: left;
+      }
+      .help {
+        margin-top: 18px;
+        text-align: left;
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+      }
+      .help summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--red);
+      }
+      .help ol {
+        padding-left: 20px;
+      }
+      .help li {
+        margin: 6px 0;
+        font-size: 0.9rem;
+      }
+      .frow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        flex-wrap: wrap;
+      }
+      .filebtn {
+        display: inline-block;
+        background: #f1f1f3;
+        border: 1px dashed #c7c7cc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .filebtn:hover {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .curimg {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .thumb {
+        width: 42px;
+        height: 42px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+      }
+      .tag {
+        font-size: 0.7rem;
+        padding: 1px 6px;
+        border-radius: 20px;
+      }
+      .tag.new {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .rm {
+        border: none;
+        background: #f4f4f5;
+        color: #9ca3af;
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .rm:hover {
+        background: #fee2e2;
+        color: var(--red);
+      }
+      .dept {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+        background: #fafafa;
+      }
+      .dept-head {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .dept-head .dept-name {
+        font-weight: 700;
+        color: var(--red);
+      }
+      .member {
+        border-top: 1px solid var(--line);
+        padding: 12px 0 4px;
+      }
+      .member-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      @media (max-width: 640px) {
+        .member-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .cla-head {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .cla-head .c-region {
+        font-weight: 700;
+        color: var(--red);
+        flex: 1;
+        min-width: 140px;
+      }
+      .chk {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+      .status {
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+      }
+      .status.info {
+        background: #eff6ff;
+        color: #1e40af;
+      }
+      .status.error {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+      .status.success {
+        background: #f0fdf4;
+        color: #166534;
+      }
+      .save-card {
+        position: sticky;
+        bottom: 0;
+      }
+    </style>
+  </body>
+</html>
