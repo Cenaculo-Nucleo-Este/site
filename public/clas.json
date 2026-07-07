@@ -27,9 +27,7 @@
         "latitude": 41.1543874,
         "longitude": -8.4196926
       }
-    }
-  ],
-  "Recarei": [
+    },
     {
       "name": "Clã 112 - José Mouro Pinto",
       "agrupamento": "1173 Fornos",
@@ -46,9 +44,9 @@
   ],
   "São Vicente de Pinheiro": [
     {
-      "name": "Cla X",
+      "name": "Cla S/N",
       "agrupamento": "369 São Vicente de Pinheiro",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
@@ -60,7 +58,7 @@
     {
       "name": "Tribo São Gonçalo",
       "agrupamento": "448 Amarante",
-      "description": null,
+      "description": "",
       "image": "clas/amarante.jpeg",
       "instagram": "https://www.instagram.com/cla__xv",
       "facebook": null,
@@ -75,7 +73,7 @@
     {
       "name": "Cla 14",
       "agrupamento": "519 Paredes",
-      "description": null,
+      "description": "",
       "image": "clas/irivo.jpeg",
       "instagram": "https://www.instagram.com/escutismo519",
       "facebook": null,
@@ -90,7 +88,7 @@
     {
       "name": "Cla X",
       "agrupamento": "557 Penafiel",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
@@ -103,7 +101,7 @@
     {
       "name": "Clã São João Paulo II",
       "agrupamento": "609 Parada de Todeia",
-      "description": null,
+      "description": "",
       "image": "clas/parada.JPG",
       "instagram": "https://www.instagram.com/caminheiros_parados",
       "facebook": null,
@@ -118,7 +116,7 @@
     {
       "name": "Cla 75",
       "agrupamento": "694 Margaride",
-      "description": null,
+      "description": "",
       "image": "clas/margaride.jpeg",
       "instagram": null,
       "facebook": "https://www.facebook.com/share/16iuBBNrwD/",
@@ -133,7 +131,7 @@
     {
       "name": "Cla X",
       "agrupamento": "765 Seroa",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
@@ -146,7 +144,7 @@
     {
       "name": "Clã 88 S.Paulo",
       "agrupamento": "873 Urrô 🤘🏻",
-      "description": null,
+      "description": "",
       "image": "clas/urro.jpeg",
       "instagram": "https://www.instagram.com/cla_88_urro",
       "facebook": null,
@@ -159,9 +157,9 @@
   ],
   "Irivo": [
     {
-      "name": "Clã 92 Carlos Acutis ",
+      "name": "Clã 92 Carlos Acutis",
       "agrupamento": "912 S. Vicente de Irivo",
-      "description": null,
+      "description": "",
       "image": "clas/irivo.jpeg",
       "instagram": "https://www.instagram.com/cla_912irivo",
       "facebook": null,
@@ -176,7 +174,7 @@
     {
       "name": "Cla 104",
       "agrupamento": "1030 Rebordosa",
-      "description": null,
+      "description": "",
       "image": "clas/rebordosa.jpeg",
       "instagram": "https://www.instagram.com/cla.104_1030",
       "facebook": null,
@@ -191,14 +189,14 @@
     {
       "name": "Clã 105 Santo Agostinho",
       "agrupamento": "1039 Vilela",
-      "description": null,
+      "description": "",
       "image": "clas/vilela.jpeg",
       "instagram": "https://www.instagram.com/cla105.vilela",
       "facebook": null,
       "email": "geral.1039@escutismo.pt",
       "coordinates": {
         "latitude": 41.2446681,
-        "longitude":-8.388658
+        "longitude": -8.388658
       }
     }
   ],
@@ -206,7 +204,7 @@
     {
       "name": "Clã 70",
       "agrupamento": "1061 Gondalães",
-      "description": null,
+      "description": "",
       "image": "clas/gondalaes.jpeg",
       "instagram": "https://www.instagram.com/1061_gondalaes",
       "facebook": "https://www.facebook.com/share/173UFoBfuh/?mibextid=wwXIfr",
@@ -221,20 +219,20 @@
     {
       "name": "Cla X",
       "agrupamento": "1069 Macieira",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
       "email": "geral.1069@escutismo.pt",
-      "coordinates": null,
-      "ativo": false
+      "ativo": false,
+      "coordinates": null
     }
   ],
   "Meinedo": [
     {
       "name": "Clã 111",
       "agrupamento": "1095 Meinedo",
-      "description": null,
+      "description": "",
       "image": "clas/meinedo.jpeg",
       "instagram": "https://www.instagram.com/agrup.1095",
       "facebook": null,
@@ -249,7 +247,7 @@
     {
       "name": "Clã 53 - Dr. Mário Fonseca",
       "agrupamento": "1253 Silvares",
-      "description": null,
+      "description": "",
       "image": "clas/silvares.jpeg",
       "instagram": "https://www.instagram.com/cla53_silvares/",
       "facebook": null,
@@ -264,7 +262,7 @@
     {
       "name": "Cla Aristides de Sousa Mendes",
       "agrupamento": "1258 Castelo de Paiva",
-      "description": null,
+      "description": "",
       "image": "clas/castelo.jpeg",
       "instagram": "https://www.instagram.com/cla1258_",
       "facebook": null,
@@ -279,7 +277,7 @@
     {
       "name": "Clã Sobrosa",
       "agrupamento": "1267 Sobrosa",
-      "description": null,
+      "description": "",
       "image": "clas/sobrosa.jpeg",
       "instagram": "https://www.instagram.com/caminheiros.do.1267",
       "facebook": null,
@@ -294,7 +292,7 @@
     {
       "name": "Clã Padre Azemiro",
       "agrupamento": "1275 Airães",
-      "description": null,
+      "description": "",
       "image": "clas/airaes.jpeg",
       "instagram": "https://www.instagram.com/agrupamento1275_airaes",
       "facebook": null,
@@ -309,7 +307,7 @@
     {
       "name": "Clã S. João Paulo II",
       "agrupamento": "1341 Freamunde",
-      "description": null,
+      "description": "",
       "image": "clas/freamunde.jpeg",
       "instagram": "https://www.instagram.com/caminheiros.freamunde",
       "facebook": null,
@@ -324,7 +322,7 @@
     {
       "name": "Clã 1361",
       "agrupamento": "1361 S. Martinho de Recesinhos",
-      "description": null,
+      "description": "",
       "image": "clas/recesinhos.jpeg",
       "instagram": "https://www.instagram.com/iv_caminheiros.1361",
       "facebook": null,
@@ -339,26 +337,26 @@
     {
       "name": "Cla X",
       "agrupamento": "1410 São Miguel de Bustelo",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
       "email": "geral.1410@escutismo.pt",
-      "coordinates": null,
-      "ativo": false
+      "ativo": false,
+      "coordinates": null
     }
   ],
   "S. Tiago de Figueiró": [
     {
       "name": "Cla X",
       "agrupamento": "1412 S. Tiago de Figueiró",
-      "description": null,
+      "description": "",
       "image": null,
       "instagram": null,
       "facebook": null,
       "email": "geral.1412@escutismo.pt",
-      "coordinates": null,
-      "ativo": false
+      "ativo": false,
+      "coordinates": null
     }
   ]
 }
