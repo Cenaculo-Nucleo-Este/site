@@ -67,6 +67,7 @@ export interface Ciclo {
   imaginario: string | null;
   image: ImageMetadata | string;
   carta: string;
+  cyarta: string | null;
   instagram: string | null;
   picturesLink: string | null;
   hino: string | null;
